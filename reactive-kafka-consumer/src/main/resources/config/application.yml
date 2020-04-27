@@ -1,0 +1,13 @@
+kafka:
+  bootstrap:
+    servers:
+     - localhost:9092
+  topics:
+    - demo-topic
+  client:
+    id: reactive-kafka-consumer
+  group:
+    id: reactive-kafka-group
+
+server:
+  port: 8084

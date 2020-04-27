@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Reactive Kafka Histogram</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+    <script type="text/javascript">
+         var stompClient = null;
+         var mostVNocAlarmID = [];
+         var mostAffectedNode = [];
+         var timelineERA015 = [];
+         var countTimelineERA015 = [];
+
+         var layoutVNocAlarmID = {
+             title: {
+                 text: 'Alarm Histogram'
+             },
+             xaxis: {
+                 title: {
+                     text: 'vnocAlarmID'
+                 }
+             },
+             yaxis: {
+                 title: {
+                     text: 'Amount'
+                 }
+             }
+         };
+         var layoutAffectedNode = {
+             title: {
+                 text: 'Node Histogram'
+             },
+             xaxis: {
+                 title: {
+                     text: 'affectedNode'
+                 }
+             },
+             yaxis: {
+                 title: {
+                     text: 'Amount'
+                 }
+             }
+         };
+         var layoutTimelineERA015 = {
+             title: {
+                 text: 'ERA015 alarms per hour'
+             },
+             xaxis: {
+                 title: {
+                     text: 'Hour'
+                 }
+             },
+             yaxis: {
+                 title: {
+                     text: 'Amount'
+                 }
+             }
+         };
+
+         function connect() {
+             var socket = new SockJS('/websocket');
+             stompClient = Stomp.over(socket);
+             stompClient.connect({}, function(frame) {
+                 console.log('Connected: ' + frame);
+                 stompClient.subscribe('/topic/websocket', function(messageOutput) {
+                     var parseMessage = JSON.parse(messageOutput.body);
+                     mostVNocAlarmID.push(parseMessage['vnocAlarmID']);
+                     mostAffectedNode.push(parseMessage['affectedNode']);
+                     if ('ERA015' === parseMessage['vnocAlarmID']) {
+                         var dt = new Date(parseMessage['alarmEventTime']);
+                         timelineERA015.push(dt.getHours());
+                         countTimelineERA015.push(timelineERA015.length);
+                     }
+
+                     var traceVNocAlarmID = {
+                         x: mostVNocAlarmID,
+                         type: 'histogram',
+                         'tickformat': ',d'
+                     };
+                     var dataVNocAlarmID = [traceVNocAlarmID];
+                     Plotly.newPlot('chart_div_vnocAlarmid', dataVNocAlarmID, layoutVNocAlarmID);
+
+                     var traceAffectedNode = {
+                         x: mostAffectedNode,
+                         type: 'histogram',
+                         'tickformat': ',d'
+                     };
+                     var dataAffectedNode = [traceAffectedNode];
+                     Plotly.newPlot('chart_div_affectednode', dataAffectedNode, layoutAffectedNode);
+
+                     var traceTimelineERA015 = {
+                         x: timelineERA015,
+                         type: 'scatter',
+                         y: countTimelineERA015
+                     };
+                     var dataTimelineERA015 = [traceTimelineERA015];
+                     Plotly.newPlot('chart_div_timelineERA015', dataTimelineERA015, layoutTimelineERA015);
+
+                 });
+             });
+         }
+
+         function disconnect() {
+             if (stompClient != null) {
+                 stompClient.disconnect();
+             }
+             console.log("Disconnected");
+         }
+      </script>
+</head>
+<body onload="disconnect()">
+<div>
+    <br/>
+    <div>
+        <button id="connect" onclick="connect();">Connect</button>
+    </div>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <div id="chart_div_vnocAlarmid" style="width: 1200px; height: 500px;"></div>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <div id="chart_div_affectednode" style="width: 1200px; height: 500px;"></div>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <div id="chart_div_timelineERA015" style="width: 1200px; height: 500px;"></div>
+</div>
+</body>
+</html>
+
