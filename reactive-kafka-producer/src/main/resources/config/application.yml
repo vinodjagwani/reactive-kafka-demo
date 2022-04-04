@@ -1,0 +1,12 @@
+kafka:
+  bootstrap:
+    servers:
+      - localhost:9092
+  topics:
+    - demo-topic
+  client:
+    id: reactive-kafka-producer
+  acks: all
+
+server:
+  port: 8083

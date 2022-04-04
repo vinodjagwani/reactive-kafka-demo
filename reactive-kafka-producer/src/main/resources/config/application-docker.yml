@@ -1,0 +1,12 @@
+kafka:
+  bootstrap:
+    servers:
+      - ${KAFKA_HOST}:${KAFKA_PORT}
+  topics:
+    - demo-topic
+  client:
+    id: reactive-kafka-producer
+  acks: all
+
+server:
+  port: 8081
